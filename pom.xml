@@ -15,13 +15,15 @@
     <maven.compiler.source>1.11</maven.compiler.source>
     <maven.compiler.target>1.11</maven.compiler.target>
 
-    <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version> <!-- todo: check if newer exists -->
-    <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version> <!-- todo: check if newer exists -->
+    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
+    <flyway.version>6.0.1</flyway.version>
+    <jooq.version>3.12.1</jooq.version>
+    <mssqljdbc.version>7.4.1.jre11</mssqljdbc.version>
     <junit.version>4.12</junit.version>
-    <slf4j.version>1.7.26</slf4j.version>
+    <slf4j.version>1.7.28</slf4j.version>
     <logback.version>1.2.3</logback.version>
   </properties>
-
 
   <build>  
     <plugins>
@@ -32,11 +34,111 @@
         <configuration>
           <release>11</release>
         </configuration>
-      </plugin>    
+      </plugin>
+
+      <!-- DB Migration plugin:
+          Setting migration to run at phase generate sources.
+          While the official Flyway documentation suggests that migrations be done in the compile phase,
+          the jOOQ code generator relies on such migrations being done prior to code generation.
+          See - https://www.jooq.org/doc/3.12/manual/getting-started/tutorials/jooq-with-flyway/ -->
+      <plugin>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-maven-plugin</artifactId>
+        <version>${flyway.version}</version>
+        <executions>
+          <execution>
+            <id>jooq-talk-db-migrate</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>migrate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</driver>
+          <user>${env.SQL_DB_USER}</user>
+          <password>${env.SQL_DB_PASSWORD}</password>
+          <url>${env.DB_URL};databaseName=JOOQ_TALK</url>
+          <locations>
+            <location>
+              filesystem:src/main/resources/db_migrations/jooq_talk
+            </location>
+          </locations>
+          <!-- You should set these as false for TEST-LAB / PROD: -->
+          <cleanOnValidationError>true</cleanOnValidationError>
+          <baselineOnMigrate>true</baselineOnMigrate>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>${mssqljdbc.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <!-- JOOQ - Relational DB persistence & query code generation tool:
+       See the following references for more info:
+        1) maven configuration of JOOQ code generation - https://www.jooq.org/doc/3.12/manual/code-generation/codegen-configuration/
+        2) generating code for two DBs - http://stackoverflow.com/a/26105204/1952591 -->
+      <plugin>
+        <groupId>org.jooq.pro</groupId>
+        <artifactId>jooq-codegen-maven</artifactId>
+        <version>${jooq.version}</version>
+        <executions>
+          <execution>
+            <id>jooq-talk-entity-gen</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <jdbc>
+                <driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</driver>
+                <url>${env.DB_URL}</url>
+                <user>${env.SQL_DB_USER}</user>
+                <password>${env.SQL_DB_PASSWORD}</password>
+              </jdbc>
+              <generator>
+                <database>
+                  <name>org.jooq.meta.sqlserver.SQLServerDatabase</name>
+                  <includes>.*</includes>
+                  <inputCatalog>JOOQ_TALK</inputCatalog>
+                  <inputSchema>dbo</inputSchema>
+                </database>
+                <target>
+                  <packageName>com.rotomer.jooq_talk.model.db</packageName>
+                  <directory>target/generated-sources/jooq</directory>
+                </target>
+              </generator>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>${mssqljdbc.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
     </plugins>
   </build>
 
   <dependencies>
+
+    <dependency>
+      <groupId>org.jooq.pro</groupId>
+      <artifactId>jooq</artifactId>
+      <version>${jooq.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
+      <version>${mssqljdbc.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
