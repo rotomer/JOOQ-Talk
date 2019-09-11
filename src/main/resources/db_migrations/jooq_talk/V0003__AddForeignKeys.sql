@@ -1,18 +1,18 @@
 
 -- Customers foreign keys:
-ALTER TABLE [dbo].[Customers]  WITH CHECK ADD  CONSTRAINT [FK_Customers_Addresses] FOREIGN KEY([billing_address_id])
-REFERENCES [dbo].[Addresses] ([id])
+ALTER TABLE [dbo].[Customer]  WITH CHECK ADD  CONSTRAINT [FK_Customer_Address] FOREIGN KEY([billing_address_id])
+REFERENCES [dbo].[Address] ([id])
 GO
 
-ALTER TABLE [dbo].[Customers] CHECK CONSTRAINT [FK_Customers_Addresses]
+ALTER TABLE [dbo].[Customer] CHECK CONSTRAINT [FK_Customer_Address]
 GO
 
 -- Addresses foreign keys:
-ALTER TABLE [dbo].[Addresses]  WITH CHECK ADD  CONSTRAINT [FK_Addresses_Customers] FOREIGN KEY([customer_id])
-REFERENCES [dbo].[Customers] ([id])
+ALTER TABLE [dbo].[Address]  WITH CHECK ADD  CONSTRAINT [FK_Address_Customer] FOREIGN KEY([customer_id])
+REFERENCES [dbo].[Customer] ([id])
 GO
 
-ALTER TABLE [dbo].[Addresses] CHECK CONSTRAINT [FK_Addresses_Customers]
+ALTER TABLE [dbo].[Address] CHECK CONSTRAINT [FK_Address_Customer]
 GO
 
 
