@@ -21,7 +21,7 @@
     <jooq.version>3.12.1</jooq.version>
     <mssqljdbc.version>7.4.1.jre11</mssqljdbc.version>
     <immutables.version>2.7.5</immutables.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <slf4j.version>1.7.28</slf4j.version>
     <logback.version>1.2.3</logback.version>
   </properties>
